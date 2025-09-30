@@ -40,7 +40,50 @@ app.post("/products", async (req, res) => {
 });
 
 
+app.delete("/products/:id", async (req, res) => {
+const productId = req.params.id;  //harus String
+
+await prisma.product.delete({
+where: {
+    id : Number(productId),
+},
+});
+
+//DELETE FROM pro ducts WHERE id = {productId}
+res.send("Product deleted successfully");
+})
+
+
+app.put("/products/:id", async (req, res) => {
+    const productId = req.params.id;
+    const productData = req.body;
+
+    if (
+        !(
+            productData.image &&
+            productData.description &&
+            productData.name &&
+            productData.price
+        )
+    ) {
+        return res.status(400).send("some fields are missing");
+    }
+
+    await prisma.product.update({
+        where: {
+            id: parseInt(productId),
+        }, data: {
+            name: productData.name,
+            description: productData.description,
+            price: productData.price,
+            image: productData.imageUrl,
+        },    
+});
+res.send({
+    data: productData,
+    message: "Product updated successfully"});
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
+})
