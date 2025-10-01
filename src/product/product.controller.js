@@ -7,58 +7,56 @@
 const express = require('express');
 
 const prisma = require('../db'); // Import prisma client dari layer db
+const { getAllProducts } = require('./product.service');
 
 const router = express.Router();
 
 
 router.get("/", async (req, res) => {
-    const products = await prisma.product.findMany();
+    const products = await getAllProducts();
         res.send(products);
 });
 router.get("/:id", async (req, res) => {
-    const productId = req.params.id;
 
-const product  = await prisma.product.findUnique({
-    where: {
-    id: parseInt(productId),
-},
+    try {
+        const productId = req.params.id;
+        const product  = await getProductById(productId);
+        res.send(product);
+    }
+    catch (error) {
+        res.status(400).send(error.message);
+    }   
 });
-if (!product) {
-    return res.status(400).send("product not found")
-}
 
-res.send(product);
-});
+
+
 router.post("/", async (req, res) => {
+    try {
     const newProductData = req.body;
+    const product = await createProduct(newProductData);    
 
-    const product = await prisma.product.create({
-        data : {
-            name: newProductData.name,
-            description: newProductData.description,
-            price: newProductData.price,    
-            image: newProductData.imageUrl,
-        },
-    });
     res.send(
         {data: product,
         message: "Product created successfully"
-        }
-    );
+        });
+    } catch (error) {
+    res.status(400).send(error.message);
+    }
 });
-
+  
 router.delete("/:id", async (req, res) => {
+    try {
 const productId = req.params.id;  //harus String
+await deleteProductById(parseInt(productId));
 
-await prisma.product.delete({
-where: {
-    id : Number(productId),
-},
+        //DELETE FROM pro ducts WHERE id = {productId}
+        res.send("Product deleted successfully");
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
 });
 
-//DELETE FROM pro ducts WHERE id = {productId}
-res.send("Product deleted successfully");
-})
+
 
 router.put("/:id", async (req, res) => {
     const productId = req.params.id;
